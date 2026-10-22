@@ -1,0 +1,35 @@
+name: SonarQube Analysis
+
+on:
+  push:
+    branches: ["main", "feature/sonarqube-analysis"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Build and test with Maven
+        run: ./mvnw clean verify
+
+      - name: Run SonarQube analysis
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          ./mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar \
+            -Dsonar.projectKey=sonar-ec2 \
+            -Dsonar.host.url="$SONAR_HOST_URL" \
+            -Dsonar.token="$SONAR_TOKEN"
